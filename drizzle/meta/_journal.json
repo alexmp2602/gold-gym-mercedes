@@ -1,0 +1,48 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1790239013576,
+      "tag": "0000_many_mariko_yashida",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1790258086206,
+      "tag": "0001_spotty_jocasta",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1790258261717,
+      "tag": "0002_fixed_hellion",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1790258408279,
+      "tag": "0003_square_magik",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1790259959654,
+      "tag": "0004_melted_the_fallen",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1790283805004,
+      "tag": "0005_solid_the_watchers",
+      "breakpoints": true
+    }
+  ]
+}
