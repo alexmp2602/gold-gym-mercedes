@@ -23,6 +23,6 @@ node --test tests/club.test.mjs
 
 Incluye socios, cuotas, clases, control de ingreso simulado, agenda de pádel, portal de jugadores, roles, importación, respaldos e informes. Las señas y saldos de pádel cuentan con historial de cobros. Ver los documentos de entrega para límites y pruebas.
 
-El repositorio tiene dos destinos: **Next.js nativo en Vercel** para la web pública y **Vinext sobre Cloudflare Workers/D1** para el prototipo privado existente. `vercel.json` selecciona `pnpm build:vercel`. En Vercel la gestión queda explícitamente deshabilitada hasta provisionar y configurar el backend independiente ya implementado; no se migran automáticamente los datos ni las sesiones de Sites. Ver la guía de Vercel antes de desplegar.
+El repositorio tiene dos destinos: **Next.js nativo en Vercel** para la web pública y **Vinext sobre Cloudflare Workers/D1** para el prototipo privado existente. `vercel.json` selecciona `pnpm build:vercel`. En Vercel la gestión queda explícitamente deshabilitada hasta conectar el proyecto Supabase ya creado y configurar la cuenta inicial; no se migran automáticamente los datos ni las sesiones de Sites. Ver la guía de Vercel antes de desplegar.
 
 No se incluyen credenciales, bases locales ni datos reales del gimnasio. Las fotografías y marcas pertenecen a sus respectivos titulares; la publicación del código no concede derechos de reutilización sobre esos recursos.

@@ -4,7 +4,7 @@
 
 La web institucional (`/`, `/padel`) y la propuesta (`/propuesta`) usan Next.js nativo. El despliegue no requiere credenciales para esas páginas. Se mantiene `noindex` hasta aprobar contenido y dominio definitivos.
 
-Los módulos de socios, pagos, ingresos y reservas tienen una adaptación a PostgreSQL y Supabase Auth. Falta provisionar el proyecto y cargar sus variables: mientras no estén configuradas, en Vercel las pantallas privadas muestran un aviso y todas las rutas `/api/*` responden 503 sin acceder a datos. Las cabeceras `oai-authenticated-*` enviadas por visitantes no autentican usuarios. No se habilita una identidad compartida de demostración en producción.
+Los módulos de socios, pagos, ingresos y reservas tienen una adaptación a PostgreSQL y Supabase Auth. El proyecto Supabase ya está creado y migrado; falta cargar sus variables y crear la cuenta inicial: mientras no estén configuradas, en Vercel las pantallas privadas muestran un aviso y todas las rutas `/api/*` responden 503 sin acceder a datos. Las cabeceras `oai-authenticated-*` enviadas por visitantes no autentican usuarios. No se habilita una identidad compartida de demostración en producción.
 
 ## Configuración
 
@@ -37,4 +37,4 @@ Los comandos `pnpm dev`, `pnpm build` y `pnpm start` conservan el runtime de Clo
 
 ## Activación de la gestión independiente
 
-Ver [BACKEND-PROPIO.md](BACKEND-PROPIO.md) para la migración, cuenta inicial, variables, pruebas y límites actuales. El código está implementado; el servicio remoto todavía no está creado ni conectado.
+Ver [BACKEND-PROPIO.md](BACKEND-PROPIO.md) para la migración, cuenta inicial, variables, pruebas y límites actuales. El código está implementado; el servicio remoto está creado y migrado, pendiente de conexión con Vercel y cuenta inicial.

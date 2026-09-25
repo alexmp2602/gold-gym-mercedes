@@ -2,9 +2,9 @@
 
 ## Estado de esta entrega
 
-El código para Supabase Auth y PostgreSQL está implementado. No hay todavía un proyecto Supabase de Gold Gym provisionado ni variables cargadas en Vercel. Las pantallas explican que el acceso está en preparación y los módulos de datos permanecen cerrados mientras falta configuración.
+El código para Supabase Auth y PostgreSQL está implementado. El proyecto Supabase `gold-gym-mercedes` ya fue creado en la organización `alexpereyra-dev`, región São Paulo, con referencia `iqopbxqxqelptvfsxaxt`. Se aplicaron las migraciones del esquema y de optimización de políticas/índices. Todavía no hay variables cargadas en Vercel ni cuentas de Auth creadas. Las pantallas explican que el acceso está en preparación y los módulos de datos permanecen cerrados mientras falta configuración.
 
-Las pruebas locales ejecutan el motor PostgreSQL de PGlite y las API reales del dominio. Las pruebas del proveedor de autenticación usan un cliente simulado: falta validar envío/recepción de correos, PKCE, cookies, recuperación y revocación contra el proyecto remoto. No hay datos reales migrados.
+La base remota fue verificada: 14 tablas con RLS, sin acceso al esquema para anon/authenticated, rol de aplicación sin superusuario/BYPASSRLS y prueba transaccional de aislamiento completada con rollback (sin datos persistidos). Advisors: sin avisos de seguridad; quedan sólo índices sin uso, esperables en una base nueva. Las pruebas locales ejecutan el motor PostgreSQL de PGlite y las API reales del dominio. Las pruebas del proveedor de autenticación usan un cliente simulado: falta validar envío/recepción de correos, PKCE, cookies, recuperación y revocación contra el proyecto remoto. No hay datos reales migrados.
 
 ## Diseño
 
@@ -19,8 +19,8 @@ Las pruebas locales ejecutan el motor PostgreSQL de PGlite y las API reales del 
 
 ## Activación
 
-1. Crear un proyecto **dedicado** `gold-gym-mercedes` en la organización elegida y confirmar el costo informado por Supabase. No reutilizar proyectos de otros clientes.
-2. Aplicar el archivo generado por CLI en `supabase/migrations/20260925065344_gold_gym_private_schema.sql` a esa base mediante la herramienta de migraciones de Supabase. La migración no es idempotente: aplicarla una sola vez con historial. Ejecutar advisors y resolver avisos del proyecto.
+1. **Completado:** crear un proyecto **dedicado** `gold-gym-mercedes` en la organización elegida y confirmar el costo informado por Supabase. No reutilizar proyectos de otros clientes.
+2. **Completado en este proyecto:** aplicar el archivo generado por CLI en `supabase/migrations/20260925065344_gold_gym_private_schema.sql` a esa base mediante la herramienta de migraciones de Supabase. La migración no es idempotente: aplicarla una sola vez con historial. Ejecutar advisors y resolver avisos del proyecto.
 3. Crear/verificar la cuenta inicial del dueño en Supabase Auth. Su contraseña la elige el titular. Copiar su UUID a `GOLD_GYM_OWNER_ID`; no compartir la contraseña por chat ni versionarla. El backend no permite autoasignarse como dueño.
 4. Configurar confirmación de correo, contraseña mínima de 12 caracteres, Site URL y Redirect URLs con el dominio definitivo y `/auth/callback`. Habilitar el proveedor de email y configurar SMTP para entrega real. Mantener los mensajes genéricos para evitar enumeración.
 5. Cargar las cinco variables de `.env.example` en Vercel como variables del servidor: `APP_URL`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `DATABASE_URL`, `GOLD_GYM_OWNER_ID`. Usar la URI **Transaction pooler** del panel Connect. La clave publishable no concede permisos de base; no hace falta `service_role` para esta aplicación.

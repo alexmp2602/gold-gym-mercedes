@@ -1,0 +1,17 @@
+CREATE INDEX members_plan_id_idx ON club.members(plan_id);
+CREATE INDEX payments_member_id_idx ON club.payments(member_id);
+CREATE INDEX enrollments_member_id_idx ON club.enrollments(member_id);
+CREATE INDEX booking_payments_booking_id_idx ON club.booking_payments(booking_id);
+ALTER POLICY club_scope ON club.plans USING (owner = (SELECT current_setting('app.club_owner', true))) WITH CHECK (owner = (SELECT current_setting('app.club_owner', true)));
+ALTER POLICY club_scope ON club.members USING (owner = (SELECT current_setting('app.club_owner', true))) WITH CHECK (owner = (SELECT current_setting('app.club_owner', true)));
+ALTER POLICY club_scope ON club.sessions USING (owner = (SELECT current_setting('app.club_owner', true))) WITH CHECK (owner = (SELECT current_setting('app.club_owner', true)));
+ALTER POLICY club_scope ON club.payments USING (owner = (SELECT current_setting('app.club_owner', true))) WITH CHECK (owner = (SELECT current_setting('app.club_owner', true)));
+ALTER POLICY club_scope ON club.accesses USING (owner = (SELECT current_setting('app.club_owner', true))) WITH CHECK (owner = (SELECT current_setting('app.club_owner', true)));
+ALTER POLICY club_scope ON club.audit USING (owner = (SELECT current_setting('app.club_owner', true))) WITH CHECK (owner = (SELECT current_setting('app.club_owner', true)));
+ALTER POLICY club_scope ON club.bookings USING (owner = (SELECT current_setting('app.club_owner', true))) WITH CHECK (owner = (SELECT current_setting('app.club_owner', true)));
+ALTER POLICY club_scope ON club.enrollments USING (owner = (SELECT current_setting('app.club_owner', true))) WITH CHECK (owner = (SELECT current_setting('app.club_owner', true)));
+ALTER POLICY club_scope ON club.staff USING (owner = (SELECT current_setting('app.club_owner', true))) WITH CHECK (owner = (SELECT current_setting('app.club_owner', true)));
+ALTER POLICY club_scope ON club.imports USING (owner = (SELECT current_setting('app.club_owner', true))) WITH CHECK (owner = (SELECT current_setting('app.club_owner', true)));
+ALTER POLICY club_scope ON club.restores USING (owner = (SELECT current_setting('app.club_owner', true))) WITH CHECK (owner = (SELECT current_setting('app.club_owner', true)));
+ALTER POLICY club_scope ON club.settings USING (owner = (SELECT current_setting('app.club_owner', true))) WITH CHECK (owner = (SELECT current_setting('app.club_owner', true)));
+ALTER POLICY club_scope ON club.booking_payments USING (owner = (SELECT current_setting('app.club_owner', true))) WITH CHECK (owner = (SELECT current_setting('app.club_owner', true)));
