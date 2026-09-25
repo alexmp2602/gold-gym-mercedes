@@ -30,7 +30,7 @@ const compile = (file, replacements) => {
 };
 writeFileSync(
   join(folder, "runtime.mjs"),
-  `export const env={}; export let currentUser=null; export function setUser(id){currentUser=id?{userId:id}:null} export async function getChatGPTUser(){return currentUser}`,
+  `export const env={}; export const supportsSitesIdentity=true; export async function independentUserId(){return null} export function ownerAccount(){return false} export let currentUser=null; export function setUser(id){currentUser=id?{userId:id}:null} export async function getChatGPTUser(){return currentUser}`,
 );
 writeFileSync(join(folder, "club.mjs"), compile("lib/club.ts", []));
 writeFileSync(
@@ -77,6 +77,7 @@ for (const endpoint of [
     compile("app/api/" + endpoint + "/route.ts", [
       ["'zod'", JSON.stringify(pathToFileURL(require.resolve("zod")).href)],
       ["@/lib/server", "./server.mjs"],
+      ["@club/runtime", "./runtime.mjs"],
       ["@/lib/club", "./club.mjs"],
       ["@/lib/backup", "./backup-lib.mjs"],
       ["@/lib/padel-settings", "./padel-settings.mjs"],

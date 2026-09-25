@@ -1,4 +1,4 @@
-import { env } from "@club/runtime";
+import { env, supportsSitesIdentity, independentUserId, ownerAccount } from "@club/runtime";
 import { getChatGPTUser } from "@/app/chatgpt-auth";
 export class ClubError extends Error {
   constructor(
@@ -11,9 +11,14 @@ export class ClubError extends Error {
 export type ClubRole = "owner" | "reception" | "gate" | "player";
 export type Principal = { userId: string; owner: string; role: ClubRole };
 export async function identity() {
-  const user = await getChatGPTUser();
-  if (user) return user.userId;
-  if (process.env.NODE_ENV === "development") return "local-preview";
+  if (!supportsSitesIdentity) {
+    const id = await independentUserId();
+    if (id) return id;
+  } else {
+    const user = await getChatGPTUser();
+    if (user) return user.userId;
+    if (process.env.NODE_ENV === "development") return "local-preview";
+  }
   throw new ClubError("Iniciá sesión para abrir la gestión privada.", 401);
 }
 export function database(): D1Database {
@@ -30,7 +35,10 @@ export async function principal(): Promise<Principal> {
     .prepare("SELECT owner,role,status FROM staff WHERE user_id=?")
     .bind(userId)
     .first<{ owner: string; role: string; status: string }>();
-  if (!membership) return { userId, owner: userId, role: "owner" };
+  if (!membership) {
+    if (supportsSitesIdentity || ownerAccount(userId)) return { userId, owner: userId, role: "owner" };
+    throw new ClubError("Tu cuenta todavía no tiene acceso al club. Contactá a la administración.", 403);
+  }
   if (
     membership.status !== "active" ||
     !["reception", "gate", "player"].includes(membership.role)

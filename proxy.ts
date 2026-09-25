@@ -1,3 +1,4 @@
+import { authConfigured } from "@/lib/auth/config";
 import { supportsSitesIdentity } from "@club/runtime";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -5,6 +6,13 @@ import { NextResponse, type NextRequest } from "next/server";
 // authenticated Workers backend. Never forward public identity headers to it.
 export function proxy(request: NextRequest) {
   if (supportsSitesIdentity) return NextResponse.next();
+  if (authConfigured()) {
+    if (request.nextUrl.pathname === "/signin-with-chatgpt") return NextResponse.redirect(new URL("/acceso", request.url));
+    const response = NextResponse.next();
+    response.headers.set("Cache-Control", "private, no-store");
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
+    return response;
+  }
   if (request.nextUrl.pathname.startsWith("/api/")) {
     return NextResponse.json(
       { error: "La gestión todavía no está habilitada en este alojamiento." },

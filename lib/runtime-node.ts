@@ -1,4 +1,5 @@
-// Vercel cannot use Workers bindings or trust Sites identity headers.
-// Keep private services unavailable until an independent backend is configured.
-export const env: { DB?: D1Database } = {};
+import { getPostgresDatabase } from './postgres/database';
+export { independentUserId } from './auth/client';
+export { ownerAccount } from './auth/config';
+export const env = { get DB() { return getPostgresDatabase(); } };
 export const supportsSitesIdentity = false;

@@ -4,7 +4,7 @@
 
 La web institucional (`/`, `/padel`) y la propuesta (`/propuesta`) usan Next.js nativo. El despliegue no requiere credenciales para esas páginas. Se mantiene `noindex` hasta aprobar contenido y dominio definitivos.
 
-Los módulos de socios, pagos, ingresos y reservas todavía dependen de Cloudflare D1 y de identidad de Sites. En Vercel las pantallas privadas muestran un aviso y todas las rutas `/api/*` responden 503 sin acceder a datos. Las cabeceras `oai-authenticated-*` enviadas por visitantes no autentican usuarios. No se habilita una identidad compartida de demostración en producción.
+Los módulos de socios, pagos, ingresos y reservas tienen una adaptación a PostgreSQL y Supabase Auth. Falta provisionar el proyecto y cargar sus variables: mientras no estén configuradas, en Vercel las pantallas privadas muestran un aviso y todas las rutas `/api/*` responden 503 sin acceder a datos. Las cabeceras `oai-authenticated-*` enviadas por visitantes no autentican usuarios. No se habilita una identidad compartida de demostración en producción.
 
 ## Configuración
 
@@ -35,8 +35,6 @@ Para desarrollo Next: `pnpm dev:vercel`. Para servir el build Next: `pnpm start:
 
 Los comandos `pnpm dev`, `pnpm build` y `pnpm start` conservan el runtime de Cloudflare. El alias `@club/runtime` separa sus bindings de la compilación Next. No copiar las variables o cabeceras de identidad de Sites a Vercel como sustituto de autenticación.
 
-## Próximo hito: gestión independiente
+## Activación de la gestión independiente
 
-Antes de habilitarla en Vercel faltan autenticación propia (sesiones, recuperación, invitaciones), base persistente con transacciones compatibles, provisión explícita del dueño del club, migración de datos y permisos, respaldos automáticos y pruebas de restauración. No asignar rol de dueño por el solo hecho de iniciar sesión con un proveedor nuevo.
-
-Luego: anulaciones/devoluciones auditadas, paginación de listados, monitoreo y límites de solicitudes. El molinete requiere conocer su controlador/protocolo y probarlo físicamente. Los cobros actuales son registros manuales; no procesan pagos online.
+Ver [BACKEND-PROPIO.md](BACKEND-PROPIO.md) para la migración, cuenta inicial, variables, pruebas y límites actuales. El código está implementado; el servicio remoto todavía no está creado ni conectado.

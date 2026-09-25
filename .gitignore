@@ -49,3 +49,7 @@ next-env.d.ts
 
 # Native Next.js output (separate from Vinext generated types)
 .next-vercel/
+
+/supabase/.temp/
+/supabase/.branches/
+!.env.example

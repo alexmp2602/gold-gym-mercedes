@@ -1,3 +1,4 @@
+import { supportsSitesIdentity, ownerAccount } from "@club/runtime";
 import { z } from "zod";
 import {
   identity,
@@ -27,11 +28,14 @@ export async function GET() {
       return Response.json(
         {
           userId,
+          authProvider: supportsSitesIdentity ? "sites" : "supabase",
           role: membership.status === "active" ? membership.role : "revoked",
           members: [],
         },
         { headers: { "Cache-Control": "no-store" } },
       );
+    if (!supportsSitesIdentity && !ownerAccount(userId))
+      return Response.json({ userId, role: "pending", members: [], authProvider: "supabase" }, { headers: { "Cache-Control": "no-store" } });
     const result = await db
       .prepare(
         "SELECT user_id,name,role,status,created_at FROM staff WHERE owner=? ORDER BY name",
@@ -39,7 +43,7 @@ export async function GET() {
       .bind(userId)
       .all();
     return Response.json(
-      { userId, role: "owner", members: result.results },
+      { userId, role: "owner", members: result.results, authProvider: supportsSitesIdentity ? "sites" : "supabase" },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (e) {
@@ -55,7 +59,7 @@ export async function POST(req: Request) {
       throw new ClubError("Revisá el identificador, nombre y rol.");
     const input = parsed.data,
       db = database();
-    if (input.userId === p.userId)
+    if (input.userId === p.userId || ownerAccount(input.userId))
       throw new ClubError(
         "No podés cambiar tu propio acceso de administración.",
       );

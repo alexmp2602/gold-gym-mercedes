@@ -1,0 +1,118 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { PGlite } from '@electric-sql/pglite';
+import ts from 'typescript';
+import { readFileSync, writeFileSync, mkdtempSync, rmSync, readdirSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { createRequire } from 'node:module';
+const folder = mkdtempSync(join(tmpdir(), 'gold-postgres-')), require = createRequire(import.meta.url);
+function compile(file, name, replacements = []) {
+  let source = readFileSync(file, 'utf8');
+  const pairs = [...replacements, ['@club/runtime', './runtime.mjs'], ['@/app/chatgpt-auth', './runtime.mjs'], ['@/lib/server', './server.mjs'], ['@/lib/club', './club.mjs'], ['@/lib/backup', './backup.mjs'], ['@/lib/padel-settings', './padel-settings.mjs'], ['@/lib/csv', './csv.mjs']];
+  for (const [from, to] of pairs) source = source.replaceAll(from, to);
+  source = source.replaceAll('"zod"', JSON.stringify(pathToFileURL(require.resolve('zod')).href));
+  writeFileSync(join(folder, name + '.mjs'), ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ES2022, target: ts.ScriptTarget.ES2022 } }).outputText);
+}
+writeFileSync(join(folder, 'runtime.mjs'), `export const env={}; export const supportsSitesIdentity=false; export let user=null; export let owner='owner-a'; export const setUser=x=>user=x; export const setOwner=x=>owner=x; export async function independentUserId(){return user}; export function ownerAccount(id){return id===owner}; export async function getChatGPTUser(){throw Error('Untrusted Sites identity used')}`);
+for (const [file, name, replacements] of [
+  ['lib/server.ts','server'], ['lib/club.ts','club'], ['lib/backup.ts','backup',[['./club','./club.mjs']]], ['lib/padel-settings.ts','padel-settings'], ['lib/csv.ts','csv'], ['lib/postgres/adapter.ts','adapter'], ['lib/auth/config.ts','auth-config'],
+  ...['club','team','player','settings','booking-payments','reports','export','backup'].map(x=>[`app/api/${x}/route.ts`, x+'-api']),
+]) compile(file, name, replacements);
+const load = name => import(pathToFileURL(join(folder, name+'.mjs')));
+const runtime = await load('runtime'), { createDatabase, postgresQuery } = await load('adapter');
+const api = await load('club-api'), team = await load('team-api'), player = await load('player-api'), ledger = await load('booking-payments-api'), reports = await load('reports-api'), exporter = await load('export-api'), backup = await load('backup-api'), config = await load('auth-config');
+const pg = new PGlite();
+let clubOwner = 'owner-a';
+await pg.exec('CREATE ROLE anon; CREATE ROLE authenticated;');
+for (const file of readdirSync('supabase/migrations').filter(x=>x.endsWith('.sql')).sort()) await pg.exec(readFileSync('supabase/migrations/'+file,'utf8'));
+const query = connection => async (sql, values) => {
+  const result = await connection.query(sql, values);
+  return { rows: result.rows, count: result.affectedRows ?? result.rows.length };
+};
+async function transaction(work) {
+  return pg.transaction(async tx => {
+    await tx.exec('SET LOCAL ROLE gold_gym_app; SET LOCAL search_path TO club, pg_catalog;');
+    await tx.query("SELECT set_config('app.club_owner', $1, true)", [clubOwner]);
+    await tx.query('SELECT pg_advisory_xact_lock(71946201)');
+    return work(query(tx));
+  });
+}
+runtime.env.DB = createDatabase((sql, values)=>transaction(q=>q(sql,values)), transaction);
+async function post(endpoint, payload) {
+  const r = await endpoint.POST(new Request('https://test.local/api/test', { method:'POST', headers:{'content-type':'application/json',origin:'https://test.local'}, body:JSON.stringify(payload) }));
+  return { status:r.status,...await r.json() };
+}
+async function get(endpoint=api, search='') {
+  const r=await endpoint.GET(new Request('https://test.local/api/test'+search));return {status:r.status,...await r.json()};
+}
+const key=()=>crypto.randomUUID();
+try {
+  await test('PostgreSQL domain flows with RLS and independent accounts', async t=> {
+    await t.test('No identity or new account can become owner', async()=> {
+      assert.equal((await get()).status,401);
+      runtime.setUser('unassigned');assert.equal((await get()).status,403);
+      assert.equal((await get(team)).role,'pending');
+    });
+    runtime.setUser('owner-a');
+    await t.test('SQL placeholders preserve literals and parameters', ()=>assert.equal(postgresQuery("SELECT '?' as literal, ? as value"), "SELECT '?' as literal, $1 as value"));
+    await t.test('Schema denies Data API roles and isolates club rows', async()=>{
+      await assert.rejects(pg.transaction(async tx=>{await tx.exec('SET LOCAL ROLE anon');await tx.query('SELECT * FROM club.members')}));
+      await assert.rejects(runtime.env.DB.prepare('INSERT INTO plans VALUES(?,?,?,?,?)').bind(key(),'other-owner','Blocked',1,30).run());
+      assert.equal((await runtime.env.DB.prepare('SELECT * FROM plans WHERE owner=?').bind('other-owner').all()).results.length,0);
+    });
+    await t.test('Seed loads valid PostgreSQL records once',async()=>{
+      assert.equal((await post(api,{action:'seed'})).status,200);
+      assert.equal((await get()).members.length,6);
+      assert.equal((await post(api,{action:'seed'})).status,409);
+    });
+    const data=await get(), member=data.members.find(m=>m.dni==='99000001');
+    await t.test('Payments renew dates atomically and retries do not duplicate',async()=>{
+      const payload={action:'payment',memberId:member.id,expectedPrice:30000,method:'Efectivo',requestKey:key()};
+      const r=await post(api,payload);assert.equal(r.status,200,JSON.stringify(r));assert.equal((await post(api,payload)).replayed,true);
+      const updated=await get();assert.equal(updated.payments.length,1);assert.ok(updated.members.find(x=>x.id===member.id).expires>member.expires);
+    });
+    await t.test('Batch failure rolls back earlier writes',async()=>{
+      const id=key();await assert.rejects(runtime.env.DB.batch([
+        runtime.env.DB.prepare('INSERT INTO plans VALUES(?,?,?,?,?)').bind(id,clubOwner,'Rollback',1,30),
+        runtime.env.DB.prepare('INSERT INTO plans VALUES(?,?,?,?,?)').bind(id,clubOwner,'Duplicate',1,30),
+      ]));assert.equal(await runtime.env.DB.prepare('SELECT * FROM plans WHERE id=?').bind(id).first(),null);
+    });
+    await t.test('Owner grants, restricts and revokes staff access',async()=>{
+      assert.equal((await post(team,{userId:'reception',name:'Recepción',role:'reception',status:'active'})).status,200);
+      runtime.setUser('reception');assert.equal((await get()).status,200);assert.equal((await post(api,{action:'plan',name:'Forbidden',price:1,days:30})).status,403);
+      runtime.setUser('owner-a');await post(team,{userId:'reception',name:'Recepción',role:'reception',status:'revoked'});
+      runtime.setUser('reception');assert.equal((await get()).status,403);runtime.setUser('owner-a');
+    });
+    const day = new Date(Date.now()+86400000*5).toISOString().slice(0,10);
+    let booking;
+    await t.test('Padel deposit, settlement and duplicate slots retain constraints',async()=>{
+      const p={action:'booking',court:1,day,start:480,name:'Prueba PostgreSQL',phone:'',kind:'booking',amount:24000,deposit:6000,depositMethod:'Efectivo',requestKey:key(),weeks:1};
+      const r=await post(api,p);assert.equal(r.status,200,JSON.stringify(r));
+      assert.equal((await post(api,{...p,requestKey:key()})).status,409);
+      booking=(await get()).bookings.find(b=>b.name===p.name);
+      const s=await post(api,{action:'settleBooking',id:booking.id,expectedDeposit:6000,method:'Transferencia'});assert.equal(s.status,200,JSON.stringify(s));
+      assert.equal((await post(api,{action:'settleBooking',id:booking.id,expectedDeposit:6000,method:'Transferencia'})).replayed,true);
+      const h=await get(ledger,'?bookingId='+booking.id);assert.equal(h.payments.length,2);
+    });
+    await t.test('Reports aggregate PostgreSQL payments',async()=>{
+      const r=await get(reports);assert.equal(r.status,200,JSON.stringify(r));
+    });
+    let snapshot;
+    await t.test('JSON backup retains numeric fields and relations',async()=>{
+      const response=await exporter.GET();assert.equal(response.status,200);snapshot=await response.json();assert.equal(snapshot.schemaVersion,2);
+      assert.equal(snapshot.records.booking_payments.length,2);
+    });
+    await t.test('Restore uses typed JSON recordsets and remaps references',async()=>{
+      clubOwner='owner-b';runtime.setOwner(clubOwner);runtime.setUser(clubOwner);
+      const r=await post(backup,{action:'restore',requestKey:key(),backup:snapshot});assert.equal(r.status,200,JSON.stringify(r));
+      const restored=await get();assert.equal(restored.members.length,6);assert.notEqual(restored.members[0].id,member.id);
+      const book=restored.bookings.find(b=>b.name===booking.name);assert.equal((await get(ledger,'?bookingId='+book.id)).payments.length,2);
+    });
+    await t.test('Redirects reject external URLs and auth loops',()=>{
+      for(const url of ['https://evil.test','//evil.test','/\\evil.test','/auth/callback'])assert.equal(config.safeReturnTo(url),'/gestion');
+      assert.equal(config.safeReturnTo('/jugar?day=2026-10-01'),'/jugar?day=2026-10-01');
+    });
+  });
+} finally {await pg.close();rmSync(folder,{recursive:true,force:true});}

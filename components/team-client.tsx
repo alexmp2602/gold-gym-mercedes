@@ -16,8 +16,9 @@ type Staff = {
   status: "active" | "revoked";
 };
 type Team = {
+  authProvider?: "sites" | "supabase";
   userId: string;
-  role: "owner" | "reception" | "gate" | "player" | "revoked";
+  role: "owner" | "reception" | "gate" | "player" | "revoked" | "pending";
   members: Staff[];
 };
 export default function TeamClient() {
@@ -89,6 +90,7 @@ export default function TeamClient() {
       )}
       <section className="panel">
         <h2>Tu cuenta</h2>
+        {data?.authProvider === "supabase" && <Link href="/cuenta" className="text-link">Mi cuenta y cierre de sesión</Link>}
         <p style={{ marginTop: 18 }}>
           Identificador de esta cuenta en el sitio:
         </p>
@@ -117,6 +119,7 @@ export default function TeamClient() {
                   gate: "Terminal de ingreso",
                   player: "Jugador de pádel",
                   revoked: "Acceso desactivado",
+                  pending: "Pendiente de habilitación",
                 }[data.role]
               : "Cargando…"}
           </strong>

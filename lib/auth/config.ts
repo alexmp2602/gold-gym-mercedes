@@ -1,0 +1,17 @@
+export function authConfigured() {
+  if (!process.env.SUPABASE_PUBLISHABLE_KEY || !process.env.DATABASE_URL || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(process.env.GOLD_GYM_OWNER_ID ?? '')) return false;
+  try {
+    const auth = new URL(process.env.SUPABASE_URL ?? '');
+    const app = new URL(process.env.APP_URL ?? '');
+    return auth.protocol === 'https:' && (app.protocol === 'https:' || (process.env.NODE_ENV !== 'production' && app.hostname === 'localhost'));
+  } catch { return false; }
+}
+export function safeReturnTo(value: unknown) {
+  if (typeof value !== 'string' || !value.startsWith('/') || value.startsWith('//') || value.includes('\\')) return '/gestion';
+  const url = new URL(value, 'https://club.local');
+  if (url.origin !== 'https://club.local' || url.pathname.startsWith('/auth/') || url.pathname === '/acceso') return '/gestion';
+  return url.pathname + url.search;
+}
+export function ownerAccount(userId: string) {
+  return /^[0-9a-f-]{36}$/i.test(process.env.GOLD_GYM_OWNER_ID ?? '') && process.env.GOLD_GYM_OWNER_ID === userId;
+}

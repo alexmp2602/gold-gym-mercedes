@@ -17,7 +17,7 @@ try {
     await delay(500);
   }
   assert.ok(ready, `Next server did not start: ${logs}`);
-  for (const path of ['/', '/padel', '/propuesta']) {
+  for (const path of ['/', '/padel', '/propuesta', '/acceso', '/recuperar', '/crear-cuenta', '/actualizar-clave']) {
     const res = await fetch(base + path);
     assert.equal(res.status, 200, path);
     assert.match(await res.text(), /Gold Gym/);
@@ -28,7 +28,7 @@ try {
     assert.match(await res.text(), /La gestión todavía no está habilitada/);
     assert.match(res.headers.get('x-robots-tag') ?? '', /noindex/);
   }
-  for (const path of ['club', 'backup', 'booking-payments', 'export', 'import-members', 'player', 'reports', 'settings', 'team']) {
+  for (const path of ['auth', 'club', 'backup', 'booking-payments', 'export', 'import-members', 'player', 'reports', 'settings', 'team']) {
     for (const method of ['GET', 'POST']) {
       const res = await fetch(`${base}/api/${path}`, { method, headers: spoofed });
       assert.equal(res.status, 503, `${method} ${path}`);
