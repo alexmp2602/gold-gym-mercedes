@@ -1,4 +1,4 @@
-import { env } from "cloudflare:workers";
+import { env } from "@club/runtime";
 import { getChatGPTUser } from "@/app/chatgpt-auth";
 export class ClubError extends Error {
   constructor(

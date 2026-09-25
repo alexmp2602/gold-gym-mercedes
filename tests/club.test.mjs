@@ -36,7 +36,7 @@ writeFileSync(join(folder, "club.mjs"), compile("lib/club.ts", []));
 writeFileSync(
   join(folder, "server.mjs"),
   compile("lib/server.ts", [
-    ["cloudflare:workers", "./runtime.mjs"],
+    ["@club/runtime", "./runtime.mjs"],
     ["@/app/chatgpt-auth", "./runtime.mjs"],
   ]),
 );

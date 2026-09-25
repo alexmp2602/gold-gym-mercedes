@@ -1,4 +1,4 @@
-import { env } from "cloudflare:workers";
+import { env } from "@club/runtime";
 import { drizzle } from "drizzle-orm/d1";
 import * as schema from "./schema";
 export function getDb() {

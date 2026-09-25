@@ -1,3 +1,4 @@
+import { supportsSitesIdentity } from "@club/runtime";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 export type ChatGPTUser = {
@@ -16,6 +17,7 @@ const SIGN_IN_PATH = "/signin-with-chatgpt";
 const SIGN_OUT_PATH = "/signout-with-chatgpt";
 const CALLBACK_PATH = "/callback";
 export async function getChatGPTUser(): Promise<ChatGPTUser | null> {
+  if (!supportsSitesIdentity) return null;
   const requestHeaders = await headers();
   const userId = requestHeaders.get(USER_ID_HEADER);
   const email = requestHeaders.get(USER_EMAIL_HEADER);

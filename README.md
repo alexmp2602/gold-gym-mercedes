@@ -2,6 +2,7 @@
 
 Web institucional y prototipo funcional privado de gestión de gimnasio y pádel.
 
+- [Despliegue en Vercel y límites actuales](docs/VERCEL.md)
 - [Entrega y recorrido](docs/ENTREGA.md)
 - [Propuesta y guía comercial](docs/VENTA.md)
 - [Puesta en marcha y aceptación](docs/PUESTA-EN-MARCHA.md)
@@ -21,6 +22,6 @@ node --test tests/club.test.mjs
 
 Incluye socios, cuotas, clases, control de ingreso simulado, agenda de pádel, portal de jugadores, roles, importación, respaldos e informes. Las señas y saldos de pádel cuentan con historial de cobros. Ver los documentos de entrega para límites y pruebas.
 
-Este proyecto usa APIs de Next.js mediante **Vinext sobre Cloudflare Workers/D1**. La identidad de la versión alojada depende de Sites/ChatGPT; para otro alojamiento es necesario configurar identidad y base de datos. No es una exportación estática ni se despliega sin adaptación en un servidor Next.js convencional.
+El repositorio tiene dos destinos: **Next.js nativo en Vercel** para la web pública y **Vinext sobre Cloudflare Workers/D1** para el prototipo privado existente. `vercel.json` selecciona `pnpm build:vercel`. En Vercel la gestión queda explícitamente deshabilitada hasta implementar autenticación y base de datos independientes; no se migran automáticamente los datos ni las sesiones de Sites. Ver la guía de Vercel antes de desplegar.
 
 No se incluyen credenciales, bases locales ni datos reales del gimnasio. Las fotografías y marcas pertenecen a sus respectivos titulares; la publicación del código no concede derechos de reutilización sobre esos recursos.
