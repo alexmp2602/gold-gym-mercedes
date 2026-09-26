@@ -2,7 +2,8 @@ import postgres from 'postgres';
 import { createDatabase, type Query } from './adapter';
 let database: D1Database | undefined;
 export function getPostgresDatabase(): D1Database | undefined {
-  const url = process.env.DATABASE_URL;
+  // DATABASEURL supports the existing write-only Vercel secret. Prefer DATABASE_URL.
+  const url = process.env.DATABASE_URL || process.env.DATABASEURL;
   if (!url) return undefined;
   if (database) return database;
   const client = postgres(url, {

@@ -1,5 +1,5 @@
 export function authConfigured() {
-  if (!process.env.SUPABASE_PUBLISHABLE_KEY || !process.env.DATABASE_URL || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(process.env.GOLD_GYM_OWNER_ID ?? '')) return false;
+  if (!process.env.SUPABASE_PUBLISHABLE_KEY || !(process.env.DATABASE_URL || process.env.DATABASEURL) || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(process.env.GOLD_GYM_OWNER_ID ?? '')) return false;
   try {
     const auth = new URL(process.env.SUPABASE_URL ?? '');
     const app = new URL(process.env.APP_URL ?? '');
